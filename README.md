@@ -1,22 +1,23 @@
 # Spark and Kafka in Docker Cluster #
 
 This build is based on the following article:  https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445 
- written by @dekoperez and then adjusted and extended to include Spark Streaming and PySpark compatibility.  
+ written by [@dekoperez](https://twitter.com/dekoperez) and then adjusted and extended to include Spark Streaming and PySpark compatibility.  
   
-## Spark and Hadoop Release information and dependancies ##
+A two-node cluster and a spark master are built as Docker images along with a separate JupyterLab environment.  Each runs in a separate container and shares a network and shared file-system.  
+  
+![Cluster](./cluster.png)     
+  
+## Spark and Hadoop Configuration and Release Information ##
 
 Build as of 2021-01-01  
    
-Spark Version 2.4.5 is used to ensure compatibility with PySpark and Kafka and enable spark-streaming that is compatible with PySpark.
-
-spark_version=2.4.5
-hadoop_version=2.7
-
+Spark Version `2.4.5` is used to ensure compatibility with PySpark and Kafka and enable spark-streaming that is compatible with PySpark. The Hadoop version is `2.7`
+  
 These are set at the start of the `build.sh` script and passed in as environment variables to each of the Docker build stages.  
   
-Apache Spark is running in *Standalone Mode* and controls its own master and worker nodes (instead of Yarn managing them).     
+Apache Spark is running in *Standalone Mode* and controls its own master and worker nodes instead of Yarn managing them.     
     
-Apache Spark with Apache Hadoop support is used to allow the cluster to simulate HDFS distributed filesystem using the shared volume created the docker-compose initialisation - as per this  `docker-compose.yml` excerpt:
+Apache Spark with Apache Hadoop support is used to allow the cluster to simulate HDFS distributed filesystem using the shared volume `shared-workspace` that is created during the docker-compose initialisation - as per this  `docker-compose.yml` excerpt:
 ```
 volumes:
   shared-workspace:
@@ -24,7 +25,7 @@ volumes:
     driver: local
 ```
 
-#### Build ####
+### Build ###
 
 The Docker images are built by the `build.sh` script.
 
@@ -37,23 +38,31 @@ The following Docker images are created:
   
 To allow the JupyterLab container to access the external ./notebooks file-share, enable access to this location in the Docker desktop configuration tool:  
 
-[Docker Desktop Windows settings](./WindowsDockerFileshare.png)    
+![Docker Desktop Windows settings](./WindowsDockerFileshare.png)    
+
+### Cluster Dependancies ###
+
+*Docker Compose* is used to link all the cluster components together so that an overall running cluster service can be started.  
+  
+`docker-compose.yml` initialises a shared cluster volume for the shared filesystem (HDFS simulation) and also maps ./notebooks to a mount point in the JupyterLab Docker container.  
+
+Various other port-mappings and configuration details are set in this configuration file.  Because all the worker nodes need to be referenced at `localhost`, they are mapped to different port numbers (ports 8081 and 8082 for worker 1 and 2).
         
     
-#### Start ####
+### Start ###
 
 ```
 docker-compose up --detach
 ```
 
 
-#### Stop ####
+### Stop ###
 ```
 docker-compose down
 ```
 
 
-#### Connect to Cluster via JupyterLab ####
+### Connect to Cluster via JupyterLab ###
 
 Use a web-browser to connect to `http://localhost:8888`  
   
@@ -72,7 +81,7 @@ services:
       - ./notebooks:/opt/workspace/notebooks
 ```
 
-#### Connect to Cluster via Shell session on Master ####
+### Connect to Cluster via Shell session on Master ###
 
 
 
