@@ -8,8 +8,6 @@ A two-node cluster and a spark master are built as Docker images along with a se
 ![Cluster](./images/cluster.png)     
   
 ## Spark and Hadoop Configuration and Release Information ##
-
-Build as of 2021-01-01  
    
 Spark Version `2.4.5` is used to ensure compatibility with PySpark and Kafka and enable spark-streaming that is compatible with PySpark. The Hadoop version is `2.7`
   
@@ -102,9 +100,13 @@ Because the cluster is running in Standalone Mode (*Not* Yarn), it is not possib
 
 ### Spark History Server ###
 
-Access the history server to view complete (and incomplete) applications on a per node basis.  
+Access the history server to view complete and incomplete applications on a per node basis.  
 To view the node 1 history view `http://localhost:18081` in a web browser  
-to vuew the node 2 history view `http://localhost:18082`  
+to view the node 2 history view `http://localhost:18082`  
+  
+Spark history logs are written to `/opt/workspace/events` which is on the cluster-wide shared file-system, so each worker-node shows the same history view.  
+
+The Spark History Server is configured by copying `spark-defaults.conf` to the Spark-Home `conf` directory on each worker-node as part of Docker build process (`spark-worker.Dockerfile`). 
 
 ## Kafka Build and Operations ##
 
