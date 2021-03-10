@@ -34,15 +34,43 @@ The following Docker images are created:
 + `spark-worker` - multiple Spark Worker containers can be started from this image to form the cluster.    
 + `jupyterlab` -  built on top of the cluster-base with Python and JupyterLab environment set up and sharing the same shared workspace file-system mount as the rest of the cluster.  
   
-To allow the JupyterLab container to access the external ./notebooks file-share, enable access to this location in the Docker desktop configuration tool:  
+The folder `./notebooks` in this Git Repo is mapped to a Docker volume on top of the shared workspace area.  This allows updates to the Jupyter notebooks to be maintained in the Git repository externally to the Docker build.  Create this additional volume in the Docker admin tool as follows:
 
-![Docker Desktop Windows settings](./images/WindowsDockerFileshare.png)    
+![Docker Desktop Windows settings](./images/WindowsDockerFileshare.png)
+
+The  `docker-compose.yml` file is set to mount the Git Repo `./notebooks` folder on top of `/opt/workspace` on the `jupyterlab` container :
+```
+services:
+  jupyterlab:
+    image: jupyterlab
+    container_name: jupyterlab
+    ports:
+      - 8888:8888
+    volumes:
+      - shared-workspace:/opt/workspace
+      - ./notebooks:/opt/workspace/notebooks
+```
+
+After building the images with 
++ `build.sh`  
+create the Docker volumes before starting services with `docker-compose`:
++ `docker volume create --name=hadoop-distributed-file-system`  
+then start the cluster with  
++ `docker-compose up --detach`  
+
+Three additional shared cluster-wide folders are created on top of `/opt/workspace` at build time In the Spark Master Docker build: 
++ `/opt/workspace/events` - Spark history events  
++ `/opt/workspace/datain` - source data for loading in to Spark jobs  
++ `/opt/workspace/dataout`- output data from Spark jobs  
+
+The data in these folders is *persistant* between container restarts and between Docker image rebuilds as it is located on the Docker `shared-workspace` volume.
+
 
 ### Cluster Dependancies ###
 
 *Docker Compose* is used to link all the cluster components together so that an overall running cluster service can be started.  
   
-`docker-compose.yml` initialises a shared cluster volume for the shared filesystem (HDFS simulation) and also maps ./notebooks to a mount point in the JupyterLab Docker container.  
+`docker-compose.yml` initialises a shared cluster volume for the shared filesystem (HDFS simulation) and also maps `./notebooks` to a mount point in the JupyterLab Docker container.  
 
 Various other port-mappings and configuration details are set in this configuration file.  Because all the worker nodes need to be referenced at `localhost`, they are mapped to different port numbers (ports 8081 and 8082 for worker 1 and 2).
 
@@ -87,7 +115,7 @@ View the Docker Compose Logs as follows:
 ```buildoutcfg
 docker-compose logs
 ```
-For **Spark Jobs that Hang For Ever** waiting to start, check the `docker-compose` logs for ` check your cluster UI to ensure that workers are registered and have sufficient resources`  This means that not enough resources (memory or CPU) were available to run the job.  Kill the job and configure with enough resources.
+For **Spark Jobs that Hang For Ever** waiting to start, check the `docker-compose` logs for "*check your cluster UI to ensure that workers are registered and have sufficient resources*" messages.  This means that not enough resources (memory or CPU) were available to run the job.  Kill the job and configure with enough resources.
 
 ### Monitoring the Spark Cluster and Killing Application Jobs ###
 
