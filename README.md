@@ -185,6 +185,10 @@ spark = SparkSession.\
 spark.stop()
 ```
 
+#### Download Sample Data ####
+
+Sample data for the notebooks can be downloaded by running the `data_download.ipynb` notebook.
+
 # Submit PySpark Jobs to the Spark Master #
 
 Jobs can be submitted to run against the cluster by running `spark-submit` from the jupyterlab container, which is installed in `/usr/local/bin` as part of the PySpark install in the Docker build for this image. 
