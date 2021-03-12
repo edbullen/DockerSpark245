@@ -136,6 +136,8 @@ Spark history logs are written to `/opt/workspace/events` which is on the cluste
 
 The Spark History Server is configured by copying `spark-defaults.conf` to the Spark-Home `conf` directory on each worker-node as part of Docker build process (`spark-worker.Dockerfile`). 
 
+To clear down the history of jobs, just delete the files created by job executions in `/opt/workspace/jobs`. 
+
 ## Kafka Build and Operations ##
 
 
@@ -182,3 +184,27 @@ spark = SparkSession.\
 ```
 spark.stop()
 ```
+
+# Submit PySpark Jobs to the Spark Master #
+
+Jobs can be submitted to run against the cluster by running `spark-submit` from the jupyterlab container, which is installed in `/usr/local/bin` as part of the PySpark install in the Docker build for this image. 
+  
+A convenience wrapper script in `/opt/workspace/notebooks/jobs` called `spark-submit.sh` can be used to call the main `spark-submit` utility and get it to execute a PySpark Python script in the Spark cluster - EG: 
+```
+# Start a shell-session in the JupyterLab container
+docker exec -it jupyterlab bash
+
+# CD to PySpark jobs folder
+cd notebooks/jobs
+
+# spark-submit the pi.py script
+./spark-submit.sh pi.y
+```
+
+View the progess and output from the Spark Master console UI:   
+http://localhost:8080/  
+and the history server (after the job has completed):  
+http://localhost:18081/  
+(click on the AppID link to drill down into the job execution stats and details of the DAG workflow)  
+
+
