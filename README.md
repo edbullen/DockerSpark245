@@ -1,20 +1,20 @@
 # Spark and Kafka in Docker Cluster #
 
-This build is based on the following article:  https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445 
+This build is based on the following article:  https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445
  written by [@dekoperez](https://twitter.com/dekoperez) and then adjusted and extended to include Spark Streaming and PySpark compatibility.  
-  
+
 A two-node cluster and a spark master are built as Docker images along with a separate JupyterLab environment.  Each runs in a separate container and shares a network and shared file-system.  
-  
+
 ![Cluster](./images/cluster.png)     
-  
+
 ## Spark and Hadoop Configuration and Release Information ##
-   
+
 Spark Version `2.4.5` is used to ensure compatibility with PySpark and Kafka and enable spark-streaming that is compatible with PySpark. The Hadoop version is `2.7`
-  
+
 These are set at the start of the `build.sh` script and passed in as environment variables to each of the Docker build stages.  
-  
+
 Apache Spark is running in *Standalone Mode* and controls its own master and worker nodes instead of Yarn managing them.     
-    
+
 Apache Spark with Apache Hadoop support is used to allow the cluster to simulate HDFS distributed filesystem using the shared volume `shared-workspace` that is created during the docker-compose initialisation - as per this  `docker-compose.yml` excerpt:
 ```
 volumes:
@@ -23,9 +23,36 @@ volumes:
     driver: local
 ```
 
-### Build ###
+## Build ##
 
-The Docker images are built by the `build.sh` script.
+
+### Quick-Start ###
+
+
+Ensure that the Docker environment has enough memory allocated:
+- Configure a *Minimum of 4GB* in Docker Resources, ideally 8GB   
+
+Enable a Docker Fileshare for the `./notebooks` folder in this repo  
+ - See *Shared JupyterLab Notebooks Folder* section below for more details  
+
+Build the images with
+ ```
+ build.sh
+ ```     
+Create the Docker volumes before starting services:
+ ```
+ docker volume create --name=hadoop-distributed-file-system
+ ```  
+Start the cluster with:  
+```
+docker-compose up --detach
+```
+Test the cluster using notebook `./notebooks/pyspark-notebook-1.ipynb`  
+- Use the Jupyter Lab environment which should now be available on http://localhost:8888/
+- More details about the JupyterLab environment are listed below in the "Connect to Cluster via JupyterLab" section.
+
+### Build Overview ###
+
 
 The following Docker images are created:  
 + `cluster-base` - this provides the shared directory (`/opt/workspace`) for the HDFS simulation.  
@@ -33,10 +60,14 @@ The following Docker images are created:
 + `spark-master` - Spark Master that allows Worker nodes to connect via SPARK_MASTER_PORT, also exposes the Spark Master UI web-page (port 8080).  
 + `spark-worker` - multiple Spark Worker containers can be started from this image to form the cluster.    
 + `jupyterlab` -  built on top of the cluster-base with Python and JupyterLab environment set up and sharing the same shared workspace file-system mount as the rest of the cluster.  
-  
+
+### Shared JupyterLab Notebooks Folder ###
+
 The folder `./notebooks` in this Git Repo is mapped to a Docker volume on top of the shared workspace area.  This allows updates to the Jupyter notebooks to be maintained in the Git repository externally to the Docker build.  Create this additional volume in the Docker admin tool as follows:
 
 ![Docker Desktop Windows settings](./images/WindowsDockerFileshare.png)
+
+### Docker Compose Structure ###
 
 The  `docker-compose.yml` file is set to mount the Git Repo `./notebooks` folder on top of `/opt/workspace` on the `jupyterlab` container :
 ```
@@ -51,14 +82,9 @@ services:
       - ./notebooks:/opt/workspace/notebooks
 ```
 
-After building the images with 
-+ `build.sh`  
-create the Docker volumes before starting services with `docker-compose`:
-+ `docker volume create --name=hadoop-distributed-file-system`  
-then start the cluster with  
-+ `docker-compose up --detach`  
+### Folders ###
 
-Three additional shared cluster-wide folders are created on top of `/opt/workspace` at build time In the Spark Master Docker build: 
+Three additional shared cluster-wide folders are created on top of `/opt/workspace` at build time In the Spark Master Docker build:
 + `/opt/workspace/events` - Spark history events  
 + `/opt/workspace/datain` - source data for loading in to Spark jobs  
 + `/opt/workspace/dataout`- output data from Spark jobs  
@@ -69,31 +95,33 @@ The data in these folders is *persistant* between container restarts and between
 ### Cluster Dependancies ###
 
 *Docker Compose* is used to link all the cluster components together so that an overall running cluster service can be started.  
-  
+
 `docker-compose.yml` initialises a shared cluster volume for the shared filesystem (HDFS simulation) and also maps `./notebooks` to a mount point in the JupyterLab Docker container.  
 
 Various other port-mappings and configuration details are set in this configuration file.  Because all the worker nodes need to be referenced at `localhost`, they are mapped to different port numbers (ports 8081 and 8082 for worker 1 and 2).
 
-##### Compute and Memory Resources #####
+### Compute and Memory Resources ##
 
 Re-size the `SPARK_WORKER_CORES` and `SPARK_WORKER_MEMORY` to size the cluster so that it can run in the local environment.  
 
-*check the amount of host resources allocated to Docker in the Docker Desktop configuration*   
-        
-    
-### Start ###
+*Check the amount of host resources allocated to Docker in the Docker Desktop configuration*.  8 GB of memory is recommended, 4 GB is the mimimum.
+
+![Docker Desktop Windows settings](./images/DockerDesktopMemory.png)  
+
+
+## Start Cluster ##
 
 ```
 docker-compose up --detach
 ```
 
 
-### Stop ###
+## Stop Cluster ##
 ```
 docker-compose down
 ```
 
-### Spark-Master Logs and Interactive Shell ###
+## Spark-Master Logs and Interactive Shell ##
 ##### Connect to Spark Master with Interactive Shell #####
 List the running Docker containers and identify the `CONTAINER ID` hash for the `spark-master`
 ```
@@ -109,7 +137,7 @@ Connect to the worker nodes in a similar fashion.
 ##### View Docker Container Logs #####  
 Logs can be viewed from the Docker host environment (without connecting into a container):
 ```
-docker logs <container_hash_id> 
+docker logs <container_hash_id>
 ```  
 View the Docker Compose Logs as follows:
 ```buildoutcfg
@@ -120,7 +148,7 @@ For **Spark Jobs that Hang For Ever** waiting to start, check the `docker-compos
 ### Monitoring the Spark Cluster and Killing Application Jobs ###
 
 View the overall state of the cluster via the *Spark Master Web UI* at `http://localhost:8080/`   
-  
+
 This also lists the URL for the *Spark Master Service*: `spark://spark-master:7077`   
 
 Because the cluster is running in Standalone Mode (*Not* Yarn), it is not possible to use the usual `yarn application -kill` command.  Instead, use the Spark Master web UI to list running jobs and kill them by selecting the "kill" link in the Running Applications view.
@@ -131,12 +159,12 @@ Because the cluster is running in Standalone Mode (*Not* Yarn), it is not possib
 Access the history server to view complete and incomplete applications on a per node basis.  
 To view the node 1 history view `http://localhost:18081` in a web browser  
 to view the node 2 history view `http://localhost:18082`  
-  
+
 Spark history logs are written to `/opt/workspace/events` which is on the cluster-wide shared file-system, so each worker-node shows the same history view.  
 
-The Spark History Server is configured by copying `spark-defaults.conf` to the Spark-Home `conf` directory on each worker-node as part of Docker build process (`spark-worker.Dockerfile`). 
+The Spark History Server is configured by copying `spark-defaults.conf` to the Spark-Home `conf` directory on each worker-node as part of Docker build process (`spark-worker.Dockerfile`).
 
-To clear down the history of jobs, just delete the files created by job executions in `/opt/workspace/jobs`. 
+To clear down the history of jobs, just delete the files created by job executions in `/opt/workspace/jobs`.
 
 ## Kafka Build and Operations ##
 
@@ -148,7 +176,7 @@ To clear down the history of jobs, just delete the files created by job executio
 # Connect to Cluster via JupyterLab to run Interactive Notebook Sessions #
 
 Use a web-browser to connect to `http://localhost:8888`  
-  
+
 This is enabled by the Docker VM instance which exposes port 8888 to local-host, with a configuration based on top of the Docker image "cluster-base"  
 
 The Jupyter notebooks are stored in the shared workspace `/opt/workspace245/notebooks` which is mounted on a Docker Volume and mapped to a local directory on the docker host.  The volume configuration and mapping to a local file-system mount is specified in the `docker-compose.yml` file and executed at run-time:
@@ -191,9 +219,9 @@ Sample data for the notebooks can be downloaded by running the `data_download.ip
 
 # Submit PySpark Jobs to the Spark Master #
 
-Jobs can be submitted to run against the cluster by running `spark-submit` from the jupyterlab container, which is installed in `/usr/local/bin` as part of the PySpark install in the Docker build for this image. 
-  
-A convenience wrapper script in `/opt/workspace/notebooks/jobs` called `spark-submit.sh` can be used to call the main `spark-submit` utility and get it to execute a PySpark Python script in the Spark cluster - EG: 
+Jobs can be submitted to run against the cluster by running `spark-submit` from the jupyterlab container, which is installed in `/usr/local/bin` as part of the PySpark install in the Docker build for this image.
+
+A convenience wrapper script in `/opt/workspace/notebooks/jobs` called `spark-submit.sh` can be used to call the main `spark-submit` utility and get it to execute a PySpark Python script in the Spark cluster - EG:
 ```
 # Start a shell-session in the JupyterLab container
 docker exec -it jupyterlab bash
@@ -210,5 +238,3 @@ http://localhost:8080/
 and the history server (after the job has completed):  
 http://localhost:18081/  
 (click on the AppID link to drill down into the job execution stats and details of the DAG workflow)  
-
-
