@@ -1,7 +1,7 @@
 # Spark and Kafka in Docker Cluster #
 
 This build is based on the following article:  https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445
- written by [@dekoperez](https://twitter.com/dekoperez) and then adjusted and extended to include Spark Streaming and PySpark compatibility.  
+ written by [@dekoperez](https://twitter.com/dekoperez) and then adjusted and extended to include Spark Streaming and PySpark compatibility.  The build has also been updated to include a working Spark history service.  The Python packages `numpy`, `pandas` and `matplotlib` have been added to the JupyterLab docker file - this increases the size of the image.
 
 A two-node cluster and a spark master are built as Docker images along with a separate JupyterLab environment.  Each runs in a separate container and shares a network and shared file-system.  
 
@@ -15,22 +15,16 @@ These are set at the start of the `build.sh` script and passed in as environment
 
 Apache Spark is running in *Standalone Mode* and controls its own master and worker nodes instead of Yarn managing them.     
 
-Apache Spark with Apache Hadoop support is used to allow the cluster to simulate HDFS distributed filesystem using the shared volume `shared-workspace` that is created during the docker-compose initialisation - as per this  `docker-compose.yml` excerpt:
-```
-volumes:
-  shared-workspace:
-    name: "hadoop-distributed-file-system"
-    driver: local
-```
+Apache Spark with Apache Hadoop support is used to allow the cluster to simulate HDFS distributed filesystem using the shared volume `shared-workspace`.
 
-## Build ##
+# Build ##
 
 
-### Quick-Start ###
+## Quick-Start ##
 
 
 Ensure that the Docker environment has enough memory allocated:
-- Configure a *Minimum of 4GB* in Docker Resources, ideally 8GB   
+- Configure a minimum of 4GB in Docker Resources, ideally 8GB   
 
 Enable a Docker Fileshare for the `./notebooks` folder in this repo  
  - See *Shared JupyterLab Notebooks Folder* section below for more details  
@@ -48,10 +42,10 @@ Start the cluster with:
 docker-compose up --detach
 ```
 Test the cluster using notebook `./notebooks/pyspark-notebook-1.ipynb`  
-- Use the Jupyter Lab environment which should now be available on http://localhost:8888/
-- More details about the JupyterLab environment are listed below in the "Connect to Cluster via JupyterLab" section.
+- Use the JupyterLab environment which should now be available on http://localhost:8888/
+- More details about the JupyterLab environment are listed below in the *Connect to Cluster via JupyterLab* section.
 
-### Build Overview ###
+## Build Overview ##
 
 
 The following Docker images are created:  
@@ -60,6 +54,30 @@ The following Docker images are created:
 + `spark-master` - Spark Master that allows Worker nodes to connect via SPARK_MASTER_PORT, also exposes the Spark Master UI web-page (port 8080).  
 + `spark-worker` - multiple Spark Worker containers can be started from this image to form the cluster.    
 + `jupyterlab` -  built on top of the cluster-base with Python and JupyterLab environment set up and sharing the same shared workspace file-system mount as the rest of the cluster.  
+
+
+The cluster is dependent on a hared volume `shared-workspace` that is created during the docker-compose initialisation
+- as per this  `docker-compose.yml` excerpt:
+```
+volumes:
+  shared-workspace:
+    name: "hadoop-distributed-file-system"
+    driver: local
+```
+
+Once created, the data in shared-workspace is persistent in the Docker environment.
+
+## Start Cluster ##
+
+```
+docker-compose up --detach
+```
+
+
+## Stop Cluster ##
+```
+docker-compose down
+```
 
 ### Shared JupyterLab Notebooks Folder ###
 
@@ -109,17 +127,7 @@ Re-size the `SPARK_WORKER_CORES` and `SPARK_WORKER_MEMORY` to size the cluster s
 ![Docker Desktop Windows settings](./images/DockerDesktopMemory.png)  
 
 
-## Start Cluster ##
 
-```
-docker-compose up --detach
-```
-
-
-## Stop Cluster ##
-```
-docker-compose down
-```
 
 ## Spark-Master Logs and Interactive Shell ##
 ##### Connect to Spark Master with Interactive Shell #####
@@ -168,7 +176,7 @@ To clear down the history of jobs, just delete the files created by job executio
 
 ## Kafka Build and Operations ##
 
-
+WIP
 
 
 
@@ -194,6 +202,10 @@ services:
 ...      
 ```
 
+#### Download Sample Data ####
+
+Sample data for the notebooks can be downloaded by running the `data_download.ipynb` notebook.
+
 
 #### Start a PySpark Session ####
 ```
@@ -208,14 +220,10 @@ spark = SparkSession.\
 ```
 
 #### End a PySpark Session ####
-**Important**: To make sure the memory resources of a Jupyter Notebook session are freed up, always stop the Spark session when finished in the notebook, as follows:
+**Note**: To make sure the memory resources of a Jupyter Notebook session are freed up, always stop the Spark session when finished in the notebook, as follows:
 ```
 spark.stop()
 ```
-
-#### Download Sample Data ####
-
-Sample data for the notebooks can be downloaded by running the `data_download.ipynb` notebook.
 
 # Submit PySpark Jobs to the Spark Master #
 
