@@ -172,7 +172,7 @@ Spark history logs are written to `/opt/workspace/events` which is on the cluste
 
 The Spark History Server is configured by copying `spark-defaults.conf` to the Spark-Home `conf` directory on each worker-node as part of Docker build process (`spark-worker.Dockerfile`).
 
-To clear down the history of jobs, just delete the files created by job executions in `/opt/workspace/jobs`.
+To clear down the history of jobs, just connect to the spark master or worker node and delete the files created by job executions in `/opt/workspace/events`.
 
 ## Kafka Build and Operations ##
 
