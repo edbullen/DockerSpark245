@@ -176,7 +176,7 @@ To clear down the history of jobs, just connect to the spark master or worker no
 
 ## Kafka Build and Operations ##
 
-WIP
+Local desktop install of Kafka instructions are in [README_KAFKA.md](./README_KAFKA.md)
 
 
 

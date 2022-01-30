@@ -50,9 +50,9 @@ For Windows installations, use a forward-slash separator between folders, EG `da
 
 ## Part 3 - Kafka Install and Configure ##
 
-1. Download binary from http://kafka.apache.org/downloads.html  (this note was written using version **2.5.1** `.tgz`). *Take care to download the binary version, not the source-code version.*  
-2. Extract to a dedicated folder - EG `C:\Software\kafka\2.5.1`  
-3. Set up the configuration in the `./config` folder
+1. Download binary from http://kafka.apache.org/downloads.html  (this note was written using version **2.5.1**, released August 2020). *Take care to download the binary version, not the source-code version.*  
+2. Extract to a dedicated folder - EG on Windows `C:\Software\kafka\2.5.1` or on Mac ` /usr/local/kafka`
+3. Set up the configuration in the `./config` folder where the Kafka software is extracted.
 
 #### Kafka server.properties changes ####
 
@@ -65,7 +65,7 @@ Set the Broker ID in each server properties file for the brokers.  Each broker m
 - Broker 2: `server.b2.properties`  set `broker.id=2`    
   
 - Set the Log Location in each properties file.  If working in a Windows environment, it is possible to use Windows-style absolute paths, EG:  
-`log.dirs=C:\\Software\kafka\logs`
+`log.dirs=C:\\Software\kafka\logs`.  On a Mac, set to something like `log.dirs=/tmp/kafka-logs` 
   
 Leave the rest of the configuration options with their default values for a simple test configuration.   
 
@@ -91,28 +91,66 @@ Mode: standalone
 
 ## Part 5 -  Start Kafka ##
 
+#### Starting on Mac ####
+- In a command-window, change to the location where Kafka was installed, EG:
+```
+cd /usr/local/kafka
+```
+- - Use the `kafka-server-start.sh` script to start a Kafka server, specifying the correct broker properties file, EG: 
+```
+./bin/kafka-server-start.sh ./config/server.b1.properties
+```
+
 ### Starting on Windows ###
 
 - Open a Windows CMD window and change directory to the `bin\windows` subdirectory, EG:  
  `cd C:\software\kafka\2.5.1\bin\windows`
  
-- Use the `kafka-server-start.bat` to start a Kafka server, specifying the correct broker properties file, EG:  
+- Use the `kafka-server-start.bat` script to start a Kafka server, specifying the correct broker properties file, EG:  
 `kafka-server-start.bat ..\..\config\server.b1.properties` 
 
 - At this point, the connection should be detected by Zookeeper and a note pasted in the Zookeeper console output:  
 `2020-12-02 12:38:41,943 [myid:] - INFO  [SyncThread:0:FileTxnLog@216] - Creating new log file: log.1`  
 
+### Quick-Start Test on Mac ###
+Ref: https://kafka.apache.org/25/documentation.html#quickstart
+
+Ref: https://kafka.apache.org/25/documentation.html#quickstart
+
+- Open another command window (separate from the Kafka server window)  
+   
+- **create a topic** named "quickstart-events" with a single partition and only one replica:
+```
+./bin/kafka-topics.sh --create --topic quickstart-events --bootstrap-server localhost:9092
+```
+
+- Run the **console producer client** to write a few events into the `quickstart-events` topic.  
+By default, each line entered will result in a separate event being written to the topic.  
+
+```
+./bin/kafka-console-producer.sh --topic quickstart-events --bootstrap-server localhost:9092
+```
+enter text into the STDIN reader to add new events:
+```
+This is my first event
+This is my second event
+```
+
+(CTRL-C to stop entering new events)
+- Run the **console consumer client** to consume the events (open another command window to do this):
+```
+./bin/kafka-console-consumer.sh  --topic quickstart-events --from-beginning --bootstrap-server localhost:9092
+```
 ### Quick-Start Test on Windows ###
 
 Ref: https://kafka.apache.org/25/documentation.html#quickstart
 
--  Open another Windows CMD window (separate from the Kafka server window)  
+-  Open another command window (separate from the Kafka server window)  
    
 - **create a topic** named "quickstart-events" with a single partition and only one replica:
 ```
 bin\windows\kafka-topics.bat --create --topic quickstart-events --bootstrap-server localhost:9092
 ```
-
 In the Windows CMD window where Kafka was started, output similar to the following is displayed:
 
 ```
