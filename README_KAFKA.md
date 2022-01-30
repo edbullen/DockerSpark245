@@ -91,12 +91,12 @@ Mode: standalone
 
 ## Part 5 -  Start Kafka ##
 
-#### Starting on Mac ####
+### Starting on Mac ###
 - In a command-window, change to the location where Kafka was installed, EG:
 ```
 cd /usr/local/kafka
 ```
-- - Use the `kafka-server-start.sh` script to start a Kafka server, specifying the correct broker properties file, EG: 
+- Use the `kafka-server-start.sh` script to start a Kafka server, specifying the correct broker properties file, EG: 
 ```
 ./bin/kafka-server-start.sh ./config/server.b1.properties
 ```
@@ -113,8 +113,6 @@ cd /usr/local/kafka
 `2020-12-02 12:38:41,943 [myid:] - INFO  [SyncThread:0:FileTxnLog@216] - Creating new log file: log.1`  
 
 ### Quick-Start Test on Mac ###
-Ref: https://kafka.apache.org/25/documentation.html#quickstart
-
 Ref: https://kafka.apache.org/25/documentation.html#quickstart
 
 - Open another command window (separate from the Kafka server window)  
@@ -180,11 +178,12 @@ This is my second event
 bin\windows\kafka-console-consumer.bat --topic quickstart-events --from-beginning --bootstrap-server localhost:9092
 ```
 
+### Consume Events *from-beginning* Vs New Events ###
+
 The `--from-beginning` flag reads *all* records from the earliest available record.
 
-Use 
+Just omit this flag to only consume new events as they are produced
 ```
 bin\windows\kafka-console-consumer.bat --topic quickstart-events --bootstrap-server localhost:9092
 ```
-
-to only consume new messages as they are produced.  
+  

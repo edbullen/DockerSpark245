@@ -107,10 +107,10 @@ Three additional shared cluster-wide folders are created on top of `/opt/workspa
 + `/opt/workspace/datain` - source data for loading in to Spark jobs  
 + `/opt/workspace/dataout`- output data from Spark jobs  
 
-The data in these folders is *persistant* between container restarts and between Docker image rebuilds as it is located on the Docker `shared-workspace` volume.
+The data in these folders is *persistent* between container restarts and between Docker image rebuilds as it is located on the Docker `shared-workspace` volume.
 
 
-### Cluster Dependancies ###
+### Cluster Dependencies ###
 
 *Docker Compose* is used to link all the cluster components together so that an overall running cluster service can be started.  
 
@@ -122,7 +122,7 @@ Various other port-mappings and configuration details are set in this configurat
 
 Re-size the `SPARK_WORKER_CORES` and `SPARK_WORKER_MEMORY` to size the cluster so that it can run in the local environment.  
 
-*Check the amount of host resources allocated to Docker in the Docker Desktop configuration*.  8 GB of memory is recommended, 4 GB is the mimimum.
+*Check the amount of host resources allocated to Docker in the Docker Desktop configuration*.  8 GB of memory is recommended, 4 GB is the minimum.
 
 ![Docker Desktop Windows settings](./images/DockerDesktopMemory.png)  
 
@@ -151,7 +151,7 @@ View the Docker Compose Logs as follows:
 ```buildoutcfg
 docker-compose logs
 ```
-For **Spark Jobs that Hang For Ever** waiting to start, check the `docker-compose` logs for "*check your cluster UI to ensure that workers are registered and have sufficient resources*" messages.  This means that not enough resources (memory or CPU) were available to run the job.  Kill the job and configure with enough resources.
+For **Spark Jobs that Hang Forever** waiting to start, check the `docker-compose` logs for "*check your cluster UI to ensure that workers are registered and have sufficient resources*" messages.  This means that not enough resources (memory or CPU) were available to run the job.  Kill the job and configure with enough resources.
 
 ### Monitoring the Spark Cluster and Killing Application Jobs ###
 
@@ -241,7 +241,7 @@ cd notebooks/jobs
 ./spark-submit.sh pi.y
 ```
 
-View the progess and output from the Spark Master console UI:   
+View the progress and output from the Spark Master console UI:   
 http://localhost:8080/  
 and the history server (after the job has completed):  
 http://localhost:18081/  
