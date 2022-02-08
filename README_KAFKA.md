@@ -41,11 +41,14 @@ Download Zookeeper and follow the instructions for **Standalone Operation**.
 tickTime=2000
 dataDir=/var/lib/zookeeper
 clientPort=2181
+admin.serverPort=9876
 ```
 Change the `dataDir` entry to match the Zookeeper data persist location created earlier.  
-For Windows installations, use a forward-slash separator between folders, EG `dataDir=C:/Software/zookeeper/data`
-  
+For Windows installations, use a forward-slash separator between folders, EG `dataDir=C:/Software/zookeeper/data`. 
 
+Change the `admin.serverPort` so that the Zookeeper admin server port (default is 8080) doesn't clash with the Spark Master on port 8080.   
+The Zookeper admin server can be viewed in a web-browser at `localhost:9876/commands` (assuming the port has been changed to 9876).  
+  
 
 
 ## Part 3 - Kafka Install and Configure ##
