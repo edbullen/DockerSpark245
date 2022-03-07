@@ -12,9 +12,11 @@ Apache Kafka will run on port 9092 and Apache Zookeeper will run on port 2181.
 
 ## Part 1 - Java Install ##
 
-Install JRE that is suitable for the versions of Zookeeper and Kafka that will used.
+Install JDK that is suitable for the versions of Zookeeper and Kafka that will used.
 
-The example versions in this note are run with Java 1.8
+- Install the **JDK**, not JRE version of Java.
+
+The example versions in this note are run with Java 1.8:
 
 ```
 $ java -version
@@ -22,6 +24,8 @@ java version "1.8.0_301"
 Java(TM) SE Runtime Environment (build 1.8.0_301-b09)
 Java HotSpot(TM) 64-Bit Server VM (build 25.301-b09, mixed mode)
 ```
+
+When installing Java on Windows, *do not install Java in the default `C:\Program Files` location*.  Choose an installation path with *no spaces*, otherwise some Kafka and Zookeeper scripts may fail.
 
 ## Part 2 - Zookeeper Install ##
 Zookeeper acts as a coordinator service for managing processes in a distributed compute environment.  
@@ -43,10 +47,10 @@ dataDir=/var/lib/zookeeper
 clientPort=2181
 admin.serverPort=9876
 ```
-Change the `dataDir` entry to match the Zookeeper data persist location created earlier.  
++ Change the `dataDir` entry to match the Zookeeper data persist location created earlier.  
 For Windows installations, use a forward-slash separator between folders, EG `dataDir=C:/Software/zookeeper/data`. 
 
-Change the `admin.serverPort` so that the Zookeeper admin server port (default is 8080) doesn't clash with the Spark Master on port 8080.   
++ Change the `admin.serverPort` so that the Zookeeper admin server port (default is 8080) doesn't clash with the Spark Master on port 8080.   
 The Zookeper admin server can be viewed in a web-browser at `localhost:9876/commands` (assuming the port has been changed to 9876).  
   
 
@@ -67,8 +71,8 @@ Set the Broker ID in each server properties file for the brokers.  Each broker m
 - Broker 1: `server.b1.properties`  set `broker.id=1`  
 - Broker 2: `server.b2.properties`  set `broker.id=2`    
   
-- Set the Log Location in each properties file.  If working in a Windows environment, it is possible to use Windows-style absolute paths, EG:  
-`log.dirs=C:\\Software\kafka\logs`.  On a Mac, set to something like `log.dirs=/tmp/kafka-logs` 
+- Set the Log Location in each properties file.  If working in a Windows environment, it is possible to use Windows-style absolute paths (but *escape backslashes with another backslash*), EG:  
+`log.dirs=C:\\Software\\kafka\\logs`.  On a Mac, set to something like `log.dirs=/tmp/kafka-logs` 
   
 Leave the rest of the configuration options with their default values for a simple test configuration.   
 
@@ -79,6 +83,12 @@ Leave the rest of the configuration options with their default values for a simp
 bin/zkServer.sh start
 ```
 
+**Start Zookeeper in Windows Command Shell**
+```commandline
+bin\zkServer.cmd
+```
+(CTRL-C to exit)  
+  
 **Check Zookeeper Status**
 ```commandline
 bin/zkServer.sh status
@@ -189,4 +199,16 @@ Just omit this flag to only consume new events as they are produced
 ```
 bin\windows\kafka-console-consumer.bat --topic quickstart-events --bootstrap-server localhost:9092
 ```
-  
+### Change the Message Rention Period ###
+
+MacOS - set to 1 hour:
+```
+bin/kafka-configs --zookeeper localhost:2181 \
+  --entity-type topics \
+  --alter --add-config retention.ms=3600000 \
+  --entity-name quickstart-events
+```  
+Windows - set to 1 hour:
+```
+bin\windows\kafka-configs.bat --zookeeper localhost:2181 --entity-type topics --alter --add-config retention.ms=3600000 --entity-name quickstart-events  
+```
