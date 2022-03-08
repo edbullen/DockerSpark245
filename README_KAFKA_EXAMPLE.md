@@ -31,7 +31,7 @@ Multiple occurrences of key_n can occur in this example.  The goal is to calcula
 
 ## Run a Continuous Spark Streaming Query
 
-Start a bash session the docker container `jupyterlab` and submit the example Spark streaming job `kafka-example.py`
+Start a bash session the docker container `jupyterlab` and submit the example Spark streaming job [`/opt/workspace/notebooks/jobs/kafka-example.py`](https://github.com/edbullen/DockerSpark245/blob/master/notebooks/jobs/kafka-example.py)
 
 ```
 docker exec -it jupyterlab bash
