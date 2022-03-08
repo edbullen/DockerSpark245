@@ -1,52 +1,70 @@
-# Streaming Kafka Example - Interactive Session
+# Streaming Kafka Example 
 
-
+This is an interactive example showing a simple aggregation being applied in Spark Streaming based on a stream of data being received from a Kafka topic.
 
 ## Data Structure ##
 
-Key-Value pairs:  
-- `t`=*n*
-- `v`=*val*
+The sample data for this example is a simple list of strings, with each record separated by a new line.  
 
-*t* is the timestamp 1,2,....n  
-*v* is a value recorded for timestamp "*t*".  
+The string data is structured as key-value pairs by comma-separating the key and value in the string:
+
+```
+key_1,value_1
+key_2,value_2
+...
+key_n,value_n
+```
+
+Multiple occurrences of key_n can occur in this example.  The goal is to calculate a rolling tally of the sum of the values for each key.
 
 
-## Test Case ##
+## Setup ##
 
-Generate a rolling view of average *v* over a window of 5 timestamp periods - i.e. delta *t* = 5
-
-## Create Sample Data ##
-
-Pre-Reqs:
 1. Start Zookeeper
 2. Start Kafka Server.  These examples assume it is available on port 9092
+3. Create a Kafka Topic called `window-example`
 
-#### Setup Topic
-
+```
 ./bin/kafka-topics.sh --create --topic window-example --bootstrap-server localhost:9092
+```
+
+
+## Run a Continuous Spark Streaming Query
+
+Start a bash session the docker container `jupyterlab` and submit the example Spark streaming job `kafka-example.py`
+
+```
+docker exec -it jupyterlab bash
+```
+```
+cd /opt/workspace/notebooks/jobs
+./spark-submit.sh kafka-example.py
+```
+
+There will be a repeated summary of null processing results until some test data is provided.
+
+```
++--------+---------------+
+|test_key|sum(test_value)|
++--------+---------------+
++--------+---------------+
+```
+
+## Generate Streaming Data 
+
+The Kafka producer client can be used to interactively generate a data stream.  At the same time the output of the Spark streaming query can be checked to see how the stream of data is processed.
 
 #### Start a Producer
-
- 
+```
 ./bin/kafka-console-producer.sh --topic window-example --bootstrap-server localhost:9092 
-
-#### Start the sample Pyspark Query
-
-From the jupyterlab docker container in /opt/workspace/notebooks/jobs, use spark-submit.sh script to submit the kafka-example.py pyspark script 
-
-docker exec -it jupyterlab bash
-
-cd /opt/workspace/notebooks/jobs
-
- ./spark-submit.sh kafka-example.py
+```
  
 #### Enter test data in the Kafka producer
 
 Enter key-value strings separated by new-line (just hit enter).  These are parsed by kafka-example.py
 
 EG
-
+```
 1,3
 1,4
 2,2
@@ -57,13 +75,15 @@ EG
 3,5
 3,6
 1,10
-
+```
 #### Check the output of the Spark jobs
 
 
-kafka-example.py should process the events and periodically update the summary results based on the sum-by-key for all values as new key-value pairs are entered into the producer.
+`kafka-example.py` should process the events in micro-batches and periodically update the summary results based on the sum-by-key for all values as new key-value pairs are entered into the producer.
 
+EG
 
+```
 -------------------------------------------
 Batch: 0
 -------------------------------------------
@@ -152,7 +172,7 @@ Batch: 8
 |1       |17.0           |
 |2       |6.0            |
 +--------+---------------+
-
+```
 
 
 
