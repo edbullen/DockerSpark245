@@ -25,7 +25,7 @@ Java(TM) SE Runtime Environment (build 1.8.0_301-b09)
 Java HotSpot(TM) 64-Bit Server VM (build 25.301-b09, mixed mode)
 ```
 
-When installing Java on Windows, *do not install Java in the default `C:\Program Files` location*.  Choose an installation path with *no spaces*, otherwise some Kafka and Zookeeper scripts may fail.
+When installing Java on **Windows**, *do not install Java in the default `C:\Program Files` location*.  Choose an installation path with *no spaces*, otherwise some Kafka and Zookeeper scripts may fail.
 
 ## Part 2 - Zookeeper Install ##
 Zookeeper acts as a coordinator service for managing processes in a distributed compute environment.  
@@ -75,6 +75,22 @@ Set the Broker ID in each server properties file for the brokers.  Each broker m
 `log.dirs=C:\\Software\\kafka\\logs`.  On a Mac, set to something like `log.dirs=/tmp/kafka-logs` 
   
 Leave the rest of the configuration options with their default values for a simple test configuration.   
+
+#### Additional windows notes
+
+To avoid issues connecting from within a Docker container back to the Kafka server (default location = `host.docker.internal:9092`),
+it may be necessary to follow the workaround in this discussion: https://github.com/docker/for-win/issues/2402.
+
+Edit the C:\Windows\System32\drivers\etc\hosts file and comment out
+```
+192.168.1.170 host.docker.internal
+192.168.1.170 gateway.docker.internal
+```
+and change it to
+```
+127.0.0.1 host.docker.internal
+127.0.0.1 gateway.docker.internal
+```
 
 ## Part 4 - Start Zookeeper ##
 
