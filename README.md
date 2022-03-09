@@ -179,7 +179,7 @@ To clear down the history of jobs, just connect to the spark master or worker no
 Local desktop install of Kafka instructions are in [README_KAFKA.md](./README_KAFKA.md)
 
 
-An example of running a continuous aggregate query in Spark receiving data from a Kafka topic is provided in [README_KAFKA.md](./README_KAFKA_EXAMPLE.md) 
+An example of running a continuous aggregate query in Spark receiving data from a Kafka topic is provided in [README_KAFKA_EXAMPLE.md](./README_KAFKA_EXAMPLE.md) 
 
 # Connect to Cluster via JupyterLab to run Interactive Notebook Sessions #
 
