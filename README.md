@@ -1,7 +1,7 @@
 # Spark and Kafka in Docker Cluster #
 
-This build is based on the following article:  https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445
- written by [@dekoperez](https://twitter.com/dekoperez) and then adjusted and extended to include Spark Streaming and PySpark compatibility.  The build has also been updated to include a working Spark history service.  The Python packages `numpy`, `pandas` and `matplotlib` have been added to the JupyterLab docker file - this increases the size of the image.
+This is based on the following article:  https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445
+ written by [@dekoperez](https://twitter.com/dekoperez) and then extended to include Spark Streaming with PySpark compatibility and PySpark UDF execution on the worker nodes.  The build has also been updated to include a working Spark history service.  The Python packages `numpy`, `pandas` and `matplotlib` have been added to the JupyterLab docker file - this increases the size of the image.
 
 A two-node cluster and a spark master are built as Docker images along with a separate JupyterLab environment.  Each runs in a separate container and shares a network and shared file-system.  
 
@@ -9,25 +9,18 @@ A two-node cluster and a spark master are built as Docker images along with a se
 
 ## Spark and Hadoop Configuration and Release Information ##
 
-Spark Version `2.4.5` is used to ensure compatibility with PySpark and Kafka and enable spark-streaming that is compatible with PySpark. The Hadoop version is `2.7`
-
-These are set at the start of the `build.sh` script and passed in as environment variables to each of the Docker build stages.  
+Spark Version `2.4.5`, Hadoop version is `2.7`, Python version `3.7.3`.
 
 Apache Spark is running in *Standalone Mode* and controls its own master and worker nodes instead of Yarn managing them.     
 
 Apache Spark with Apache Hadoop support is used to allow the cluster to simulate HDFS distributed filesystem using the shared volume `shared-workspace`.
 
 # Build ##
-
-
 ## Quick-Start ##
-
 
 Ensure that the Docker environment has enough memory allocated:
 - Configure a minimum of 4GB in Docker Resources, ideally 8GB   
 
-Enable a Docker Fileshare for the `./notebooks` folder in this repo  
- - See *Shared JupyterLab Notebooks Folder* section below for more details  
 
 Build the images with
  ```
@@ -41,8 +34,8 @@ Start the cluster with:
 ```
 docker-compose up --detach
 ```
-Test the cluster using notebook `./notebooks/pyspark-notebook-1.ipynb`  
-- Use the JupyterLab environment which should now be available on http://localhost:8888/
+Test the cluster using notebook `./local/notebooks/pyspark-notebook-1.ipynb`  
+- Use the JupyterLab environment which should now be available on http://localhost:8889/
 - More details about the JupyterLab environment are listed below in the *Connect to Cluster via JupyterLab* section.
 
 ## Build Overview ##
@@ -148,7 +141,7 @@ Logs can be viewed from the Docker host environment (without connecting into a c
 docker logs <container_hash_id>
 ```  
 View the Docker Compose Logs as follows:
-```buildoutcfg
+```
 docker-compose logs
 ```
 For **Spark Jobs that Hang Forever** waiting to start, check the `docker-compose` logs for "*check your cluster UI to ensure that workers are registered and have sufficient resources*" messages.  This means that not enough resources (memory or CPU) were available to run the job.  Kill the job and configure with enough resources.

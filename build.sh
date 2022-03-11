@@ -27,3 +27,8 @@ docker build \
   --build-arg jupyterlab_version="${JUPYTERLAB_VERSION}" \
   -f jupyterlab.Dockerfile \
   -t jupyterlab .
+
+# Local copy of Notebooks and job-submit scripts outside Git change tracking
+mkdir -p ./local/notebooks
+cp -R ./notebooks/* ./local/notebooks
+

@@ -8,10 +8,10 @@ services:
     image: jupyterlab
     container_name: jupyterlab
     ports:
-      - 8888:8888
+      - 8889:8888
     volumes:
       - shared-workspace:/opt/workspace
-      - ./notebooks:/opt/workspace/notebooks
+      - ./local/notebooks:/opt/workspace/notebooks
   spark-master:
     image: spark-master
     container_name: spark-master
