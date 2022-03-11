@@ -11,7 +11,8 @@ RUN apt-get update -y && \
     pip3 install pyspark==${spark_version} jupyterlab==${jupyterlab_version} && \
 	pip3 install wget && \
     pip3 install numpy && pip3 install pandas && pip3 install matplotlib && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    ln -s /usr/local/bin/python3 /usr/bin/python
 
 # -- Runtime
 
