@@ -52,7 +52,6 @@ The following Docker images are created:
 
 
 The cluster is dependent on a shared volume `shared-workspace` that is created during the docker-compose initialisation
-- as per this  `docker-compose.yml` excerpt:
 ```
 volumes:
   shared-workspace:
@@ -98,13 +97,12 @@ This folder is included in the `.gitignore` file so updates to the notebooks and
 
 ## Data Folders ##
 
-Three shared cluster-wide folders are created on top of `/opt/workspace` at build time In the Spark Master Docker build:
+Three shared cluster-wide folders are created on top of `/opt/workspace` during the Docker build:
 + `/opt/workspace/events` - Spark history events  
 + `/opt/workspace/datain` - source data for loading in to Spark jobs  
 + `/opt/workspace/dataout`- output data from Spark jobs  
 
 The data in these folders is persistent between container restarts and between Docker image rebuilds as it is located on the Docker `shared-workspace` volume.
-
 
 ## Compute and Memory Resources ##
 
@@ -117,10 +115,7 @@ Re-size the `SPARK_WORKER_CORES` and `SPARK_WORKER_MEMORY` to size the cluster s
 
 ## Spark-Master Logs and Interactive Shell ##
 ##### Connect to Spark Master with Interactive Shell #####
-List the running Docker containers and identify the `CONTAINER ID` hash for the `spark-master`
-```
-docker ps
-```
+
 Start a shell inside the docker container and use Linux commands such as `ps`, `netstat`, `vi` / `vim` etc
 ```
 docker exec -it <container_hash_id> bash
@@ -160,15 +155,11 @@ The Spark History Server is configured by copying `spark-defaults.conf` to the S
 
 To clear down the history of jobs, just connect to the spark master or worker node and delete the files created by job executions in `/opt/workspace/events`.
 
-
-
 # Connect to Cluster via JupyterLab to run Interactive Notebook Sessions #
 
-Use a web-browser to connect to `http://localhost:8888`  
+Use a web-browser to connect to `http://localhost:8889`   
 
-This is enabled by the Docker VM instance which exposes port 8888 to local-host, with a configuration based on top of the Docker image "cluster-base"  
-
-The Jupyter notebooks are stored in the shared workspace `/opt/workspace245/notebooks` which is mounted on a Docker Volume and mapped to a local directory on the docker host.  The volume configuration and mapping to a local file-system mount is specified in the `docker-compose.yml` file and executed at run-time:
+The Jupyter notebooks are stored in the shared workspace `/opt/workspace/notebooks` which is mapped to a local directory on the Docker host.  The volume configuration and mapping to a local file-system mount is specified in the `docker-compose.yml` file and executed at run-time:
 ```
 ...
 services:
@@ -176,10 +167,10 @@ services:
     image: jupyterlab
     container_name: jupyterlab
     ports:
-      - 8888:8888
+      - 8889:8888
     volumes:
       - shared-workspace:/opt/workspace
-      - ./notebooks:/opt/workspace/notebooks
+      - ./local/notebooks:/opt/workspace/notebooks
 ...      
 ```
 
@@ -210,7 +201,7 @@ spark.stop()
 
 Jobs can be submitted to run against the cluster by running `spark-submit` from the jupyterlab container, which is installed in `/usr/local/bin` as part of the PySpark install in the Docker build for this image.
 
-A convenience wrapper script in `/opt/workspace/notebooks/jobs` called `spark-submit.sh` can be used to call the main `spark-submit` utility and get it to execute a PySpark Python script in the Spark cluster - EG:
+A wrapper script in `/opt/workspace/notebooks/jobs` called `spark-submit.sh` can be used to call the main `spark-submit` utility and get it to execute a PySpark Python script in the Spark cluster - EG:
 ```
 # Start a shell-session in the JupyterLab container
 docker exec -it jupyterlab bash
