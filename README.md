@@ -1,6 +1,8 @@
 # Spark and Kafka in Docker Cluster #
 
-This is based on the following article:  https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445
+Run a Kafka and Spark cluster on a Mac or Windows workstation or Laptop.   
+
+The Spark cluster build is based on the following article:  https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445
  written by [@dekoperez](https://twitter.com/dekoperez) and then extended to include Spark Streaming with PySpark compatibility and PySpark UDF execution on the worker nodes.  The build has also been updated to include a working Spark history service.  The Python packages `numpy`, `pandas` and `matplotlib` have been added to the JupyterLab docker file - this increases the size of the image.
 
 A two-node cluster and a spark master are built as Docker images along with a separate JupyterLab environment.  Each runs in a separate container and shares a network and shared file-system.  
@@ -46,10 +48,10 @@ The following Docker images are created:
 + `spark-base`  - base Apache Spark image to build the Spark Master and Spark Workers on.   
 + `spark-master` - Spark Master that allows Worker nodes to connect via SPARK_MASTER_PORT, also exposes the Spark Master UI web-page (port 8080).  
 + `spark-worker` - multiple Spark Worker containers can be started from this image to form the cluster.    
-+ `jupyterlab` -  built on top of the cluster-base with Python and JupyterLab environment set up and sharing the same shared workspace file-system mount as the rest of the cluster.  
++ `jupyterlab` -  built on top of the cluster-base with Python and JupyterLab environment with an additional filesystem for storing Jupyter Notebooks and spark-submit scripts.
 
 
-The cluster is dependent on a hared volume `shared-workspace` that is created during the docker-compose initialisation
+The cluster is dependent on a shared volume `shared-workspace` that is created during the docker-compose initialisation
 - as per this  `docker-compose.yml` excerpt:
 ```
 volumes:
@@ -59,6 +61,14 @@ volumes:
 ```
 
 Once created, the data in shared-workspace is persistent in the Docker environment.
+
+## Cluster Dependencies ##
+
+*Docker Compose* is used to link all the cluster components together so that an overall running cluster service can be started.  
+
+`docker-compose.yml` initialises a shared cluster volume for the shared filesystem (HDFS simulation) and also maps `./local/notebooks` to a mount point in the JupyterLab Docker container.  
+
+Various other port-mappings and configuration details are set in this configuration file.  Because all the worker nodes need to be referenced at `localhost`, they are mapped to different port numbers (ports 8081 and 8082 for worker 1 and 2).
 
 ## Start Cluster ##
 
@@ -72,54 +82,37 @@ docker-compose up --detach
 docker-compose down
 ```
 
-### Shared JupyterLab Notebooks Folder ###
+## Kafka Build and Operations ##
 
-The folder `./notebooks` in this Git Repo is mapped to a Docker volume on top of the shared workspace area.  This allows updates to the Jupyter notebooks to be maintained in the Git repository externally to the Docker build.  Create this additional volume in the Docker admin tool as follows:
+If required, a Kafka streaming environment can also be created that is integrated with the Spark cluster.  This has to be manually installed and configured. 
+ Instructions for installing Kafka are in [README_KAFKA.md](./README_KAFKA.md)
 
-![Docker Desktop Windows settings](./images/WindowsDockerFileshare.png)
+An example of running a continuous aggregate query in Spark receiving data from a Kafka topic is provided in [README_KAFKA_EXAMPLE.md](./README_KAFKA_EXAMPLE.md) 
 
-### Docker Compose Structure ###
+## Shared JupyterLab Notebooks Folder ##
 
-The  `docker-compose.yml` file is set to mount the Git Repo `./notebooks` folder on top of `/opt/workspace` on the `jupyterlab` container :
-```
-services:
-  jupyterlab:
-    image: jupyterlab
-    container_name: jupyterlab
-    ports:
-      - 8888:8888
-    volumes:
-      - shared-workspace:/opt/workspace
-      - ./notebooks:/opt/workspace/notebooks
-```
+The folder `./local/notebooks` in the Git repo is mapped to a filesytem mount `/opt/workspace/notebooks` in the JupyterLab host running in Docker.  This allows notebooks to be easily passed in and out of the Docker environment, and they can be stored and updated independently of the images.  
 
-### Folders ###
+This folder is included in the `.gitignore` file so updates to the notebooks and new notebooks are not tracked.  
 
-Three additional shared cluster-wide folders are created on top of `/opt/workspace` at build time In the Spark Master Docker build:
+
+## Data Folders ##
+
+Three shared cluster-wide folders are created on top of `/opt/workspace` at build time In the Spark Master Docker build:
 + `/opt/workspace/events` - Spark history events  
 + `/opt/workspace/datain` - source data for loading in to Spark jobs  
 + `/opt/workspace/dataout`- output data from Spark jobs  
 
-The data in these folders is *persistent* between container restarts and between Docker image rebuilds as it is located on the Docker `shared-workspace` volume.
+The data in these folders is persistent between container restarts and between Docker image rebuilds as it is located on the Docker `shared-workspace` volume.
 
 
-### Cluster Dependencies ###
-
-*Docker Compose* is used to link all the cluster components together so that an overall running cluster service can be started.  
-
-`docker-compose.yml` initialises a shared cluster volume for the shared filesystem (HDFS simulation) and also maps `./notebooks` to a mount point in the JupyterLab Docker container.  
-
-Various other port-mappings and configuration details are set in this configuration file.  Because all the worker nodes need to be referenced at `localhost`, they are mapped to different port numbers (ports 8081 and 8082 for worker 1 and 2).
-
-### Compute and Memory Resources ##
+## Compute and Memory Resources ##
 
 Re-size the `SPARK_WORKER_CORES` and `SPARK_WORKER_MEMORY` to size the cluster so that it can run in the local environment.  
 
 *Check the amount of host resources allocated to Docker in the Docker Desktop configuration*.  8 GB of memory is recommended, 4 GB is the minimum.
 
 ![Docker Desktop Windows settings](./images/DockerDesktopMemory.png)  
-
-
 
 
 ## Spark-Master Logs and Interactive Shell ##
@@ -167,12 +160,7 @@ The Spark History Server is configured by copying `spark-defaults.conf` to the S
 
 To clear down the history of jobs, just connect to the spark master or worker node and delete the files created by job executions in `/opt/workspace/events`.
 
-## Kafka Build and Operations ##
 
-Local desktop install of Kafka instructions are in [README_KAFKA.md](./README_KAFKA.md)
-
-
-An example of running a continuous aggregate query in Spark receiving data from a Kafka topic is provided in [README_KAFKA_EXAMPLE.md](./README_KAFKA_EXAMPLE.md) 
 
 # Connect to Cluster via JupyterLab to run Interactive Notebook Sessions #
 
