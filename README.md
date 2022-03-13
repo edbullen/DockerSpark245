@@ -1,6 +1,6 @@
 # Spark and Kafka in Docker Cluster #
 
-Run a Kafka and Spark cluster on a Mac or Windows workstation or Laptop.   
+Run a Kafka and Spark on a Mac or Windows workstation or laptop.   
 
 The Spark cluster build is based on the following article:  https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445
  written by [@dekoperez](https://twitter.com/dekoperez) and then extended to include Spark Streaming with PySpark compatibility and PySpark UDF execution on the worker nodes.  The build has also been updated to include a working Spark history service.  The Python packages `numpy`, `pandas` and `matplotlib` have been added to the JupyterLab docker file - this increases the size of the image.
