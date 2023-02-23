@@ -7,7 +7,7 @@ ARG jupyterlab_version=2.1.5
 
 RUN apt-get update -y && \
     apt-get install -y python3-pip && \
-	pip3 install pypandoc && \
+	pip3 install pypandoc==1.5 && \
     pip3 install pyspark==${spark_version} jupyterlab==${jupyterlab_version} && \
 	pip3 install wget && \
     pip3 install numpy && pip3 install pandas && pip3 install matplotlib && \
